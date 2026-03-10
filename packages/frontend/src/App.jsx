@@ -54,7 +54,7 @@ function App() {
   const contacts = simulationData;
   const [scores, setScores] = useState({});
   const [reportedContacts, setReportedContacts] = useState(() => new Set());
-  const [latestParentAlert, setLatestParentAlert] = useState(null);
+  const [parentAlerts, setParentAlerts] = useState([]);
 
   useEffect(() => {
     setScores(scoreAll(contacts));
@@ -79,7 +79,7 @@ function App() {
 
   const handleParentAlert = (alertPayload) => {
     if (!alertPayload?.contactName) return;
-    setLatestParentAlert(alertPayload);
+    setParentAlerts((previous) => [alertPayload, ...previous]);
   };
 
   return (
@@ -95,7 +95,7 @@ function App() {
             />
           }
         />
-        <Route path="/parent" element={<ParentDashboard initialAlert={latestParentAlert} />} />
+        <Route path="/parent" element={<ParentDashboard initialAlerts={parentAlerts} />} />
         <Route
           path="/graph"
           element={

@@ -100,8 +100,8 @@ export default function ReportFlow({ contact, onComplete, onCancel }) {
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">Report Anonymously</h2>
             <p className="mt-3 text-sm leading-6 text-gray-700">
-              You&apos;re about to report {contact.name}. Your identity will not be shared with
-              anyone — not with the platform, not with your parents.
+              You&apos;re about to report {contact.name}. The report payload excludes your personal
+              identity. Parents may still receive a safety alert for this account.
             </p>
 
             <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -149,16 +149,27 @@ export default function ReportFlow({ contact, onComplete, onCancel }) {
             </div>
 
             <p className="mt-3 text-sm text-gray-700">
-              The platform has been notified. You are completely anonymous.
+              The platform has been notified. Personal identity fields were not included.
             </p>
 
-            <pre className="mt-5 overflow-x-auto rounded-lg bg-[#0f172a] p-4 font-mono text-xs leading-5 text-green-400">
-              {JSON.stringify(serverLog, null, 2)}
-            </pre>
+            <div className="mt-5">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                  Included In Report
+                </p>
+                <p className="mt-2 text-sm text-emerald-900">
+                  <span className="font-medium">Contact:</span> {serverLog?.report?.contact ?? contact.name}
+                </p>
+                <p className="mt-1 text-sm text-emerald-900">
+                  <span className="font-medium">Risk score:</span> {serverLog?.report?.riskScore ?? scoreResult.score}
+                </p>
+                <p className="mt-2 text-xs text-emerald-800">
+                  Safety signal data only. No personal identity attached.
+                </p>
+              </div>
+            </div>
 
-            <p className="mt-2 text-xs text-gray-500">
-              This is what the server received. No trace of you.
-            </p>
+            <p className="mt-3 text-xs text-gray-500">Reported.</p>
 
             <div className="mt-6 flex justify-end">
               <button

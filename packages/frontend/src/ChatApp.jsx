@@ -100,13 +100,14 @@ function MessageBubble({ message }) {
   );
 }
 
-export default function ChatApp() {
+export default function ChatApp({ onContactReported }) {
   const contacts = simulationData;
   const [activeContactId, setActiveContactId] = useState(() =>
     getDefaultContactId(contacts)
   );
   const [scoreResults, setScoreResults] = useState({});
   const [dismissedContacts, setDismissedContacts] = useState(() => new Set());
+  const [reportedContacts, setReportedContacts] = useState(() => new Set());
   const [reportingContact, setReportingContact] = useState(null);
   const [showParentCheckIn, setShowParentCheckIn] = useState(false);
 
@@ -154,6 +155,7 @@ export default function ChatApp() {
     if (activeScoreResult.level === "high") {
       const parentChannel = new BroadcastChannel("safenest-parent");
       parentChannel.postMessage({
+        type: "alert",
         contactName: activeContact.name,
         riskScore: activeScoreResult.score,
         reasons: activeScoreResult.reasons
@@ -175,6 +177,38 @@ export default function ChatApp() {
   const handleParentCheckInHelp = () => {
     setShowParentCheckIn(false);
     setReportingContact(activeContact ?? null);
+  };
+
+  const handleReportComplete = () => {
+    if (!reportingContact?.id) {
+      setReportingContact(null);
+      return;
+    }
+
+    setReportedContacts((previous) => {
+      const next = new Set(previous);
+      next.add(reportingContact.id);
+      return next;
+    });
+
+    if (typeof onContactReported === "function") {
+      onContactReported(reportingContact.id);
+    }
+
+    const reportedScore = scoreResults[reportingContact.id] ?? {
+      score: 0,
+      reasons: []
+    };
+    const parentChannel = new BroadcastChannel("safenest-parent");
+    parentChannel.postMessage({
+      type: "report-submitted",
+      contactName: reportingContact.name,
+      riskScore: reportedScore.score,
+      reasons: reportedScore.reasons
+    });
+    parentChannel.close();
+
+    setReportingContact(null);
   };
 
   return (
@@ -263,7 +297,7 @@ export default function ChatApp() {
         <ReportFlow
           contact={reportingContact}
           onCancel={() => setReportingContact(null)}
-          onComplete={() => setReportingContact(null)}
+          onComplete={handleReportComplete}
         />
       )}
     </div>

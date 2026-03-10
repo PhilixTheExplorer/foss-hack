@@ -7,14 +7,14 @@ import VPNComparison from "./components/VPNComparison";
 import ParentDashboard from "./ParentDashboard";
 import simulationData from "./simulationData";
 
-function GraphPage({ contacts, scores }) {
+function GraphPage({ contacts, scores, reportedContacts }) {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-slate-50 px-6 py-6">
       <div className="mx-auto max-w-6xl">
         <h1 className="text-2xl font-semibold text-gray-900">Risk Graph</h1>
         <p className="mt-1 text-sm text-gray-600">Contact relationships and anomaly levels</p>
         <div className="mt-5">
-          <ContactGraph contacts={contacts} scores={scores} />
+          <ContactGraph contacts={contacts} scores={scores} reportedContacts={reportedContacts} />
         </div>
       </div>
     </div>
@@ -53,6 +53,7 @@ function TopNav() {
 function App() {
   const contacts = simulationData;
   const [scores, setScores] = useState({});
+  const [reportedContacts, setReportedContacts] = useState(() => new Set());
 
   useEffect(() => {
     setScores(scoreAll(contacts));
@@ -66,13 +67,31 @@ function App() {
     return scoreAll(contacts);
   }, [scores, contacts]);
 
+  const handleContactReported = (contactId) => {
+    if (!contactId) return;
+    setReportedContacts((previous) => {
+      const next = new Set(previous);
+      next.add(contactId);
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <TopNav />
       <Routes>
-        <Route path="/" element={<ChatApp />} />
+        <Route path="/" element={<ChatApp onContactReported={handleContactReported} />} />
         <Route path="/parent" element={<ParentDashboard />} />
-        <Route path="/graph" element={<GraphPage contacts={contacts} scores={graphScores} />} />
+        <Route
+          path="/graph"
+          element={
+            <GraphPage
+              contacts={contacts}
+              scores={graphScores}
+              reportedContacts={reportedContacts}
+            />
+          }
+        />
         <Route path="/privacy" element={<VPNComparison />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

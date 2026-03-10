@@ -29,7 +29,7 @@ function getTopReasons(scoreResult) {
   return scoreResult.reasons.slice(0, 2);
 }
 
-export default function ContactGraph({ contacts = [], scores = {} }) {
+export default function ContactGraph({ contacts = [], scores = {}, reportedContacts = new Set() }) {
   const [hoveredContactId, setHoveredContactId] = useState(null);
 
   const positionedContacts = useMemo(() => {
@@ -41,16 +41,18 @@ export default function ContactGraph({ contacts = [], scores = {} }) {
       const x = CENTER_X + RADIUS * Math.cos(angle);
       const y = CENTER_Y + RADIUS * Math.sin(angle);
       const scoreResult = scores[contact.id] ?? { score: 0, level: "safe", reasons: [] };
+      const isReported = reportedContacts instanceof Set && reportedContacts.has(contact.id);
 
       return {
         contact,
         scoreResult,
+        isReported,
         angle,
         x,
         y
       };
     });
-  }, [contacts, scores]);
+  }, [contacts, scores, reportedContacts]);
 
   const hoveredNode = positionedContacts.find((node) => node.contact.id === hoveredContactId) ?? null;
 
@@ -65,7 +67,7 @@ export default function ContactGraph({ contacts = [], scores = {} }) {
           aria-label="Contact relationship graph"
           preserveAspectRatio="xMidYMid meet"
         >
-          {positionedContacts.map(({ contact, scoreResult, x, y }) => {
+          {positionedContacts.map(({ contact, scoreResult, isReported, x, y }) => {
             const lineStyle = getLineStyle(scoreResult.level);
             const mutualDots = Math.min(Number(contact.mutualFriends ?? 0), 5);
             const dx = x - CENTER_X;
@@ -104,7 +106,7 @@ export default function ContactGraph({ contacts = [], scores = {} }) {
                   onMouseLeave={() => setHoveredContactId(null)}
                   style={{ cursor: "pointer" }}
                 >
-                  <circle cx={x} cy={y} r="31" fill={getRiskColor(scoreResult.level)} />
+                  <circle cx={x} cy={y} r="31" fill={isReported ? "#9ca3af" : getRiskColor(scoreResult.level)} />
                   <text
                     x={x}
                     y={y + 5}
@@ -113,7 +115,7 @@ export default function ContactGraph({ contacts = [], scores = {} }) {
                     fill="#ffffff"
                     fontWeight="700"
                   >
-                    {contact.name[0]}
+                    {isReported ? "✓" : contact.name[0]}
                   </text>
                 </g>
               </g>
@@ -185,6 +187,7 @@ export default function ContactGraph({ contacts = [], scores = {} }) {
         <span>🟢 Safe contact</span>
         <span>🟡 Unusual pattern</span>
         <span>🔴 High risk — report recommended</span>
+        <span>✓ Reported anonymously</span>
       </div>
     </div>
   );

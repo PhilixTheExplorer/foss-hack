@@ -17,7 +17,11 @@ export default function ParentDashboard() {
       const data = event?.data;
       if (!data?.contactName) return;
 
+      const messageType = data.type ?? "alert";
+      if (messageType !== "alert" && messageType !== "report-submitted") return;
+
       setAlert({
+        type: messageType,
         contactName: data.contactName,
         riskScore: data.riskScore ?? 0,
         reasons: Array.isArray(data.reasons) ? data.reasons : []
@@ -50,6 +54,25 @@ export default function ParentDashboard() {
           <div className="mt-8 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
             <span className="text-sm font-medium text-emerald-700">All clear</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (alert.type === "report-submitted") {
+    return (
+      <div className="min-h-screen bg-slate-50 px-6 py-16">
+        <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-semibold text-gray-900">SafeNest Parent Dashboard</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            You&apos;ll be notified if unusual patterns are detected.
+          </p>
+
+          <div className="mt-8 rounded-lg border border-emerald-300 bg-emerald-100 p-5">
+            <h2 className="text-lg font-semibold text-emerald-900">
+              ✅ Your child reported an unusual contact anonymously. No action needed.
+            </h2>
           </div>
         </div>
       </div>

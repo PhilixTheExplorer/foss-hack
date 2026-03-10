@@ -229,7 +229,7 @@ export default function ChatApp({ onContactReported, onParentAlert }) {
       <div className="mx-auto flex h-[calc(100vh-3rem)] max-w-7xl overflow-hidden rounded-sm border border-gray-200 bg-white shadow-lg">
         <aside className="flex h-full w-[30%] flex-col bg-[#075E54]">
           <div className="border-b border-emerald-800/50 px-5 py-4">
-            <h1 className="text-xl font-semibold text-white">SafeNest Demo</h1>
+            <h1 className="text-xl font-semibold text-white">WhatsApp Demo UI</h1>
           </div>
 
           <div className="flex-1 overflow-y-auto">

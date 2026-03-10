@@ -1,4 +1,5 @@
 import ChatApp from "./ChatApp";
+import VPNComparison from "./components/VPNComparison";
 import ParentDashboard from "./ParentDashboard";
 
 function App() {
@@ -6,6 +7,10 @@ function App() {
 
   if (path === "/parent") {
     return <ParentDashboard />;
+  }
+
+  if (path === "/privacy") {
+    return <VPNComparison />;
   }
 
   return <ChatApp />;

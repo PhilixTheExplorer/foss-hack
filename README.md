@@ -9,6 +9,14 @@ A privacy-first proof-of-concept that detects grooming patterns through local be
 - Theme: Security and Privacy by Design for Young Users
 - License: MIT
 
+## Team
+- Team Name: Please
+- Member 1: Kaung Hset Hein
+- Member 2: Wunna Moe San
+- Member 3: Htoo Myat Naing
+- Member 4: Kyi Phyu Thiri Khaing
+- Member 5: Felice Christiara Median Putri
+
 ---
 
 ## The Problem

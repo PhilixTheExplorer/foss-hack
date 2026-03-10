@@ -1,14 +1,3 @@
-const KEYWORDS = [
-  "snapchat",
-  "instagram",
-  "move to",
-  "gift",
-  "secret",
-  "don't tell",
-  "mature for your age",
-  "are your parents"
-];
-
 const LATE_NIGHT_START = 22;
 const LATE_NIGHT_END = 4;
 
@@ -77,10 +66,17 @@ export default function scoreContact(contact) {
     const lateNightCount = messages.reduce((count, message) => {
       return count + (isLateNight(message?.time) ? 1 : 0);
     }, 0);
+    const lateNightRatio = lateNightCount / messageCount;
 
-    if (lateNightCount / messageCount > 0.4) {
+    if (lateNightRatio >= 0.6) {
       score += 20;
+      reasons.push("Mostly active late at night (>=60% between 22:00-04:00)");
+    } else if (lateNightRatio >= 0.4) {
+      score += 15;
       reasons.push("Active mostly late at night (22:00-04:00)");
+    } else if (lateNightRatio >= 0.25) {
+      score += 8;
+      reasons.push("Notable late-night activity (>=25% between 22:00-04:00)");
     }
 
     const weekBuckets = new Map();
@@ -95,29 +91,25 @@ export default function scoreContact(contact) {
       .sort(([weekA], [weekB]) => weekA.localeCompare(weekB))
       .map(([, count]) => count);
 
-    let hasWeekOverWeekDoubling = false;
+    let maxEscalationRate = 0;
     for (let i = 1; i < weekCounts.length; i += 1) {
-      if (weekCounts[i - 1] > 0 && weekCounts[i] >= weekCounts[i - 1] * 2) {
-        hasWeekOverWeekDoubling = true;
-        break;
+      if (weekCounts[i - 1] > 0) {
+        const escalationRate = (weekCounts[i] - weekCounts[i - 1]) / weekCounts[i - 1];
+        if (escalationRate > maxEscalationRate) {
+          maxEscalationRate = escalationRate;
+        }
       }
     }
 
-    if (hasWeekOverWeekDoubling) {
+    if (maxEscalationRate >= 1) {
       score += 20;
       reasons.push("Message frequency doubled week over week");
-    }
-
-    const normalizedTexts = messages.map((message) => String(message?.text ?? "").toLowerCase());
-
-    const matchedKeywords = KEYWORDS.filter((keyword) =>
-      normalizedTexts.some((text) => text.includes(keyword))
-    );
-
-    if (matchedKeywords.length > 0) {
-      const keywordPoints = Math.min(matchedKeywords.length * 15, 30);
-      score += keywordPoints;
-      reasons.push(`Contains risky keywords: ${matchedKeywords.join(", ")}`);
+    } else if (maxEscalationRate >= 0.5) {
+      score += 12;
+      reasons.push("Message frequency increased significantly week over week");
+    } else if (maxEscalationRate >= 0.25) {
+      score += 6;
+      reasons.push("Message frequency is trending upward week over week");
     }
   }
 

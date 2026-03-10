@@ -29,24 +29,44 @@ function getLevel(score) {
   return "safe";
 }
 
+function getSocialProximityContext(contact) {
+  const inContacts = Boolean(contact?.inContacts);
+  const sharedGroupsRaw = Number(contact?.sharedGroups ?? 0);
+  const sharedGroups = Number.isNaN(sharedGroupsRaw)
+    ? 0
+    : Math.max(0, Math.min(5, Math.floor(sharedGroupsRaw)));
+
+  return {
+    inContacts,
+    sharedGroups,
+    socialProximity: (inContacts ? 2 : 0) + sharedGroups
+  };
+}
+
 export default function scoreContact(contact) {
   const reasons = [];
   let score = 0;
 
-  const mutualFriends = Number(contact?.mutualFriends ?? 0);
+  const { inContacts, sharedGroups } = getSocialProximityContext(contact);
   const accountAge = Number(contact?.accountAge ?? 0);
   const messages = Array.isArray(contact?.messages) ? contact.messages : [];
   const messageCount = messages.length;
 
-  if (mutualFriends === 0) {
+  if (!inContacts && sharedGroups === 0) {
     score += 30;
-    reasons.push("No mutual friends");
-  } else if (mutualFriends >= 1 && mutualFriends <= 3) {
+    reasons.push("Unknown contact with no shared groups");
+  } else if (!inContacts && sharedGroups <= 1) {
     score += 10;
-    reasons.push("Very few mutual friends (1-3)");
-  } else if (mutualFriends >= 5) {
+    reasons.push("Not in contacts and only one shared group");
+  } else if (inContacts && sharedGroups >= 4) {
     score -= 30;
-    reasons.push("Has 5+ mutual friends");
+    reasons.push("In contacts with strong shared-group overlap");
+  } else if (inContacts && sharedGroups >= 2) {
+    score -= 25;
+    reasons.push("In contacts with multiple shared groups");
+  } else if (inContacts) {
+    score -= 15;
+    reasons.push("In contacts");
   }
 
   if (accountAge < 30) {

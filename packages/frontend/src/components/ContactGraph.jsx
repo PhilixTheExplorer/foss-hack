@@ -78,7 +78,7 @@ export default function ContactGraph({ contacts = [], scores = {}, reportedConta
         >
           {positionedContacts.map(({ contact, scoreResult, isReported, x, y }) => {
             const lineStyle = getLineStyle(scoreResult.level);
-            const mutualDots = Math.min(Number(contact.mutualFriends ?? 0), 5);
+            const mutualDots = Math.min(Number(contact.socialProximity ?? 0), 5);
             const dx = x - CENTER_X;
             const dy = y - CENTER_Y;
 
@@ -179,7 +179,7 @@ export default function ContactGraph({ contacts = [], scores = {}, reportedConta
                 fill="#d1d5db"
                 fontSize="12"
               >
-                Mutual friends: {Number(infoNode.contact.mutualFriends ?? 0)}
+                Social proximity: {Number(infoNode.contact.socialProximity ?? 0)}
               </text>
               <text
                 x={Math.min(Math.max(infoNode.x + 30, 32), WIDTH - 305)}

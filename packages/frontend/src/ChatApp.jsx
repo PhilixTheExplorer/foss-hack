@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import scoreAll from "./anomalyScorer";
+import AnomalyBanner from "./components/AnomalyBanner";
 import simulationData from "./simulationData";
 
 const avatarColors = [
@@ -31,7 +33,13 @@ function getDefaultContactId(contacts) {
   return sarah?.id ?? contacts[0]?.id ?? "";
 }
 
-function ContactRow({ contact, active, onClick }) {
+function getLevelDotClass(level) {
+  if (level === "high") return "bg-red-500";
+  if (level === "medium") return "bg-yellow-400";
+  return "bg-green-400";
+}
+
+function ContactRow({ contact, active, onClick, level = "safe" }) {
   const lastMessage = getLastMessage(contact);
   const avatarLetter = contact.name.charAt(0).toUpperCase();
 
@@ -54,10 +62,14 @@ function ContactRow({ contact, active, onClick }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <p className="truncate text-sm font-medium text-white">{contact.name}</p>
-            <span className="shrink-0 text-xs text-emerald-100">
-              {lastMessage?.time ?? ""}
-            </span>
+            <div className="flex min-w-0 items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${getLevelDotClass(level)}`}
+                aria-hidden="true"
+              />
+              <p className="truncate text-sm font-medium text-white">{contact.name}</p>
+            </div>
+            <span className="shrink-0 text-xs text-emerald-100">{lastMessage?.time ?? ""}</span>
           </div>
 
           <p className="truncate text-xs text-emerald-100/90">
@@ -91,11 +103,40 @@ export default function ChatApp() {
   const [activeContactId, setActiveContactId] = useState(() =>
     getDefaultContactId(contacts)
   );
+  const [scoreResults, setScoreResults] = useState({});
+  const [dismissedContacts, setDismissedContacts] = useState(() => new Set());
+  const [reportingContact, setReportingContact] = useState(null);
+
+  useEffect(() => {
+    setScoreResults(scoreAll(contacts));
+  }, [contacts]);
 
   const activeContact = useMemo(
     () => contacts.find((contact) => contact.id === activeContactId) ?? contacts[0],
     [activeContactId, contacts]
   );
+
+  const activeScoreResult = scoreResults[activeContact?.id] ?? {
+    score: 0,
+    level: "safe",
+    reasons: []
+  };
+
+  const shouldShowBanner =
+    activeScoreResult.level !== "safe" && !dismissedContacts.has(activeContact?.id);
+
+  const handleDismiss = () => {
+    if (!activeContact?.id) return;
+    setDismissedContacts((previous) => {
+      const next = new Set(previous);
+      next.add(activeContact.id);
+      return next;
+    });
+  };
+
+  const handleReport = () => {
+    setReportingContact(activeContact ?? null);
+  };
 
   return (
     <div className="min-h-screen bg-[#e5ddd5] p-6">
@@ -111,6 +152,7 @@ export default function ChatApp() {
                 key={contact.id}
                 contact={contact}
                 active={contact.id === activeContact?.id}
+                level={scoreResults[contact.id]?.level ?? "safe"}
                 onClick={() => setActiveContactId(contact.id)}
               />
             ))}
@@ -125,11 +167,22 @@ export default function ChatApp() {
             </div>
           </header>
 
+          {shouldShowBanner && (
+            <AnomalyBanner
+              level={activeScoreResult.level}
+              reasons={activeScoreResult.reasons}
+              onDismiss={handleDismiss}
+              onReport={handleReport}
+            />
+          )}
+
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {activeContact?.messages?.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))}
           </div>
+
+          {reportingContact && <div className="hidden" aria-hidden="true" />}
 
           <div className="border-t border-gray-200 bg-[#f0f2f5] px-4 py-3">
             <input

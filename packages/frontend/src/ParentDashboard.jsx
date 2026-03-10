@@ -157,18 +157,6 @@ export default function ParentDashboard({ initialAlerts = [] }) {
                   </div>
                 </div>
 
-                {activeAlert.reasons.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {activeAlert.reasons.map((reason) => (
-                      <span
-                        key={reason}
-                        className="rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-gray-700"
-                      >
-                        {reason}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {expanded && (

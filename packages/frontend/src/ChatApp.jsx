@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import scoreAll from "./anomalyScorer";
 import AnomalyBanner from "./components/AnomalyBanner";
+import ReportFlow from "./components/ReportFlow";
 import simulationData from "./simulationData";
 
 const avatarColors = [
@@ -106,10 +107,25 @@ export default function ChatApp() {
   const [scoreResults, setScoreResults] = useState({});
   const [dismissedContacts, setDismissedContacts] = useState(() => new Set());
   const [reportingContact, setReportingContact] = useState(null);
+  const [showParentCheckIn, setShowParentCheckIn] = useState(false);
 
   useEffect(() => {
     setScoreResults(scoreAll(contacts));
   }, [contacts]);
+
+  useEffect(() => {
+    const teenChannel = new BroadcastChannel("safenest-teen");
+
+    teenChannel.onmessage = (event) => {
+      if (event?.data?.type === "parent-check-in") {
+        setShowParentCheckIn(true);
+      }
+    };
+
+    return () => {
+      teenChannel.close();
+    };
+  }, []);
 
   const activeContact = useMemo(
     () => contacts.find((contact) => contact.id === activeContactId) ?? contacts[0],
@@ -127,6 +143,17 @@ export default function ChatApp() {
 
   const handleDismiss = () => {
     if (!activeContact?.id) return;
+
+    if (activeScoreResult.level === "high") {
+      const parentChannel = new BroadcastChannel("safenest-parent");
+      parentChannel.postMessage({
+        contactName: activeContact.name,
+        riskScore: activeScoreResult.score,
+        reasons: activeScoreResult.reasons
+      });
+      parentChannel.close();
+    }
+
     setDismissedContacts((previous) => {
       const next = new Set(previous);
       next.add(activeContact.id);
@@ -135,6 +162,11 @@ export default function ChatApp() {
   };
 
   const handleReport = () => {
+    setReportingContact(activeContact ?? null);
+  };
+
+  const handleParentCheckInHelp = () => {
+    setShowParentCheckIn(false);
     setReportingContact(activeContact ?? null);
   };
 
@@ -182,8 +214,6 @@ export default function ChatApp() {
             ))}
           </div>
 
-          {reportingContact && <div className="hidden" aria-hidden="true" />}
-
           <div className="border-t border-gray-200 bg-[#f0f2f5] px-4 py-3">
             <input
               type="text"
@@ -194,6 +224,41 @@ export default function ChatApp() {
           </div>
         </section>
       </div>
+
+      {showParentCheckIn && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Your parent noticed something. Are you okay?
+            </h3>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowParentCheckIn(false)}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+              >
+                I&apos;m fine
+              </button>
+              <button
+                type="button"
+                onClick={handleParentCheckInHelp}
+                className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                I need help
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reportingContact && (
+        <ReportFlow
+          contact={reportingContact}
+          onCancel={() => setReportingContact(null)}
+          onComplete={() => setReportingContact(null)}
+        />
+      )}
     </div>
   );
 }

@@ -30,7 +30,15 @@ function getTopReasons(scoreResult) {
 }
 
 export default function ContactGraph({ contacts = [], scores = {}, reportedContacts = new Set() }) {
-  const [hoveredContactId, setHoveredContactId] = useState(null);
+  const [selectedContactId, setSelectedContactId] = useState(null);
+
+  const handleOutsideClick = (event) => {
+    if (!selectedContactId) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest('[data-modal-interactive="true"]')) return;
+    setSelectedContactId(null);
+  };
 
   const positionedContacts = useMemo(() => {
     const count = contacts.length;
@@ -54,10 +62,11 @@ export default function ContactGraph({ contacts = [], scores = {}, reportedConta
     });
   }, [contacts, scores, reportedContacts]);
 
-  const hoveredNode = positionedContacts.find((node) => node.contact.id === hoveredContactId) ?? null;
+  const selectedNode = positionedContacts.find((node) => node.contact.id === selectedContactId) ?? null;
+  const infoNode = selectedNode;
 
   return (
-    <div className="w-full">
+    <div className="w-full" onClick={handleOutsideClick}>
       <div className="min-h-[400px] min-w-[500px] w-full overflow-hidden rounded-xl border border-gray-200 bg-white p-3">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -102,8 +111,8 @@ export default function ContactGraph({ contacts = [], scores = {}, reportedConta
                   })}
 
                 <g
-                  onMouseEnter={() => setHoveredContactId(contact.id)}
-                  onMouseLeave={() => setHoveredContactId(null)}
+                  data-modal-interactive="true"
+                  onClick={() => setSelectedContactId((current) => (current === contact.id ? null : contact.id))}
                   style={{ cursor: "pointer" }}
                 >
                   <circle cx={x} cy={y} r="31" fill={isReported ? "#9ca3af" : getRiskColor(scoreResult.level)} />
@@ -136,41 +145,57 @@ export default function ContactGraph({ contacts = [], scores = {}, reportedConta
             </text>
           </g>
 
-          {hoveredNode && (
-            <g>
+          {infoNode && (
+            <g data-modal-interactive="true">
               <rect
-                x={Math.min(Math.max(hoveredNode.x + 16, 18), WIDTH - 320)}
-                y={Math.min(Math.max(hoveredNode.y - 90, 18), HEIGHT - 145)}
+                x={Math.min(Math.max(infoNode.x + 16, 18), WIDTH - 320)}
+                y={Math.min(Math.max(infoNode.y - 95, 18), HEIGHT - 170)}
                 width="300"
-                height="125"
+                height="150"
                 rx="10"
                 fill="#111827"
                 opacity="0.95"
               />
               <text
-                x={Math.min(Math.max(hoveredNode.x + 30, 32), WIDTH - 305)}
-                y={Math.min(Math.max(hoveredNode.y - 65, 40), HEIGHT - 105)}
+                x={Math.min(Math.max(infoNode.x + 30, 32), WIDTH - 305)}
+                y={Math.min(Math.max(infoNode.y - 70, 40), HEIGHT - 130)}
                 fill="#f9fafb"
                 fontSize="14"
                 fontWeight="700"
               >
-                {hoveredNode.contact.name}
+                {infoNode.contact.name}
               </text>
               <text
-                x={Math.min(Math.max(hoveredNode.x + 30, 32), WIDTH - 305)}
-                y={Math.min(Math.max(hoveredNode.y - 42, 62), HEIGHT - 83)}
+                x={Math.min(Math.max(infoNode.x + 30, 32), WIDTH - 305)}
+                y={Math.min(Math.max(infoNode.y - 49, 62), HEIGHT - 108)}
                 fill="#d1d5db"
                 fontSize="12"
               >
-                Score: {hoveredNode.scoreResult.score ?? 0}
+                Score: {infoNode.scoreResult.score ?? 0}
               </text>
-              {getTopReasons(hoveredNode.scoreResult).map((reason, index) => (
+              <text
+                x={Math.min(Math.max(infoNode.x + 30, 32), WIDTH - 305)}
+                y={Math.min(Math.max(infoNode.y - 31, 80), HEIGHT - 90)}
+                fill="#d1d5db"
+                fontSize="12"
+              >
+                Mutual friends: {Number(infoNode.contact.mutualFriends ?? 0)}
+              </text>
+              <text
+                x={Math.min(Math.max(infoNode.x + 30, 32), WIDTH - 305)}
+                y={Math.min(Math.max(infoNode.y - 13, 98), HEIGHT - 72)}
+                fill="#d1d5db"
+                fontSize="12"
+              >
+                Account age: {Number(infoNode.contact.accountAge ?? 0)} days
+              </text>
+              {getTopReasons(infoNode.scoreResult).map((reason, index) => (
                 <text
-                  key={`${hoveredNode.contact.id}-reason-${index}`}
-                  x={Math.min(Math.max(hoveredNode.x + 30, 32), WIDTH - 305)}
+                  key={`${infoNode.contact.id}-reason-${index}`}
+                  x={Math.min(Math.max(infoNode.x + 30, 32), WIDTH - 305)}
                   y={Math.min(
-                    Math.max(hoveredNode.y - 20 + index * 18, 84),
-                    HEIGHT - 62 + index * 18
+                    Math.max(infoNode.y + 8 + index * 18, 118),
+                    HEIGHT - 44 + index * 18
                   )}
                   fill="#d1d5db"
                   fontSize="12"
@@ -178,6 +203,18 @@ export default function ContactGraph({ contacts = [], scores = {}, reportedConta
                   • {reason}
                 </text>
               ))}
+              {selectedNode && (
+                <text
+                  x={Math.min(Math.max(infoNode.x + 270, 36), WIDTH - 48)}
+                  y={Math.min(Math.max(infoNode.y - 72, 42), HEIGHT - 134)}
+                  fill="#f9fafb"
+                  fontSize="12"
+                  fontWeight="700"
+                  textAnchor="end"
+                >
+                  Click node to close
+                </text>
+              )}
             </g>
           )}
         </svg>

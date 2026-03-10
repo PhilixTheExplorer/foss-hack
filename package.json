@@ -1,0 +1,16 @@
+{
+  "name": "safenest",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:up": "concurrently \"pnpm --filter @safenest/backend dev\" \"pnpm --filter @safenest/frontend dev\"",
+    "dev:down": "kill-port 3000 5173",
+    "install:all": "pnpm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "kill-port": "^2.0.1"
+  }
+}

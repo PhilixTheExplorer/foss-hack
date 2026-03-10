@@ -129,7 +129,6 @@ export default function ParentDashboard() {
             <button
               type="button"
               onClick={() => {
-                console.log("Parent dismissed alert");
                 setAlert(null);
                 setExpanded(false);
               }}

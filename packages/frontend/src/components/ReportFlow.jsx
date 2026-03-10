@@ -26,7 +26,7 @@ export default function ReportFlow({ contact, onComplete, onCancel }) {
     const runReport = async () => {
       const minDelay = new Promise((resolve) => setTimeout(resolve, LOADING_MS));
 
-      const requestToken = fetch("http://localhost:3001/request-token", {
+      const requestToken = fetch("http://localhost:3000/request-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       }).then((response) => response.json());
@@ -38,7 +38,7 @@ export default function ReportFlow({ contact, onComplete, onCancel }) {
         throw new Error("Missing token");
       }
 
-      await fetch("http://localhost:3001/submit-report", {
+      await fetch("http://localhost:3000/submit-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

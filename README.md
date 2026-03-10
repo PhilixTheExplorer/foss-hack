@@ -56,7 +56,7 @@ pnpm dev
 
 Frontend: http://localhost:5173
 Parent view: http://localhost:5173/parent
-Backend: http://localhost:3001
+Backend: http://localhost:3000
 
 ## Tech Stack
 

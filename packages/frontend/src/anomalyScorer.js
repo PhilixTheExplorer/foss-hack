@@ -47,6 +47,7 @@ export default function scoreContact(contact) {
   const mutualFriends = Number(contact?.mutualFriends ?? 0);
   const accountAge = Number(contact?.accountAge ?? 0);
   const messages = Array.isArray(contact?.messages) ? contact.messages : [];
+  const messageCount = messages.length;
 
   if (mutualFriends === 0) {
     score += 30;
@@ -72,12 +73,12 @@ export default function scoreContact(contact) {
     reasons.push("Account is older than 1 year");
   }
 
-  if (messages.length > 0) {
+  if (messageCount > 0) {
     const lateNightCount = messages.reduce((count, message) => {
       return count + (isLateNight(message?.time) ? 1 : 0);
     }, 0);
 
-    if (lateNightCount / messages.length > 0.4) {
+    if (lateNightCount / messageCount > 0.4) {
       score += 20;
       reasons.push("Active mostly late at night (22:00-04:00)");
     }
@@ -107,11 +108,11 @@ export default function scoreContact(contact) {
       reasons.push("Message frequency doubled week over week");
     }
 
-    const normalizedTexts = messages
-      .map((message) => String(message?.text ?? "").toLowerCase())
-      .join(" ");
+    const normalizedTexts = messages.map((message) => String(message?.text ?? "").toLowerCase());
 
-    const matchedKeywords = KEYWORDS.filter((keyword) => normalizedTexts.includes(keyword));
+    const matchedKeywords = KEYWORDS.filter((keyword) =>
+      normalizedTexts.some((text) => text.includes(keyword))
+    );
 
     if (matchedKeywords.length > 0) {
       const keywordPoints = Math.min(matchedKeywords.length * 15, 30);
@@ -120,9 +121,11 @@ export default function scoreContact(contact) {
     }
   }
 
+  const normalizedScore = Math.max(0, score);
+
   return {
-    score,
-    level: getLevel(score),
+    score: normalizedScore,
+    level: getLevel(normalizedScore),
     reasons
   };
 }

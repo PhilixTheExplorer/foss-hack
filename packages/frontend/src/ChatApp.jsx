@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import scoreAll from "./anomalyScorer";
+import scoreContact from "./anomalyScorer";
+import { scoreAll } from "./anomalyScorer";
 import AnomalyBanner from "./components/AnomalyBanner";
 import ReportFlow from "./components/ReportFlow";
 import simulationData from "./simulationData";
@@ -111,6 +112,12 @@ export default function ChatApp() {
 
   useEffect(() => {
     setScoreResults(scoreAll(contacts));
+  }, [contacts]);
+
+  useEffect(() => {
+    contacts.forEach((contact) => {
+      console.log(contact.name, scoreContact(contact));
+    });
   }, [contacts]);
 
   useEffect(() => {

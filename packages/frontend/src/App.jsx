@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import ChatApp from "./ChatApp";
-import scoreAll from "./anomalyScorer";
+import { scoreAll } from "./anomalyScorer";
 import ContactGraph from "./components/ContactGraph";
 import VPNComparison from "./components/VPNComparison";
 import ParentDashboard from "./ParentDashboard";

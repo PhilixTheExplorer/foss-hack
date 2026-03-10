@@ -100,7 +100,7 @@ function MessageBubble({ message }) {
   );
 }
 
-export default function ChatApp({ onContactReported }) {
+export default function ChatApp({ onContactReported, onParentAlert }) {
   const contacts = simulationData;
   const [activeContactId, setActiveContactId] = useState(() =>
     getDefaultContactId(contacts)
@@ -153,14 +153,20 @@ export default function ChatApp({ onContactReported }) {
     if (!activeContact?.id) return;
 
     if (activeScoreResult.level === "high") {
-      const parentChannel = new BroadcastChannel("safenest-parent");
-      parentChannel.postMessage({
+      const alertPayload = {
         type: "alert",
         contactName: activeContact.name,
         riskScore: activeScoreResult.score,
         reasons: activeScoreResult.reasons
-      });
+      };
+
+      const parentChannel = new BroadcastChannel("safenest-parent");
+      parentChannel.postMessage(alertPayload);
       parentChannel.close();
+
+      if (typeof onParentAlert === "function") {
+        onParentAlert(alertPayload);
+      }
     }
 
     setDismissedContacts((previous) => {
@@ -199,14 +205,21 @@ export default function ChatApp({ onContactReported }) {
       score: 0,
       reasons: []
     };
-    const parentChannel = new BroadcastChannel("safenest-parent");
-    parentChannel.postMessage({
+
+    const reportPayload = {
       type: "report-submitted",
       contactName: reportingContact.name,
       riskScore: reportedScore.score,
       reasons: reportedScore.reasons
-    });
+    };
+
+    const parentChannel = new BroadcastChannel("safenest-parent");
+    parentChannel.postMessage(reportPayload);
     parentChannel.close();
+
+    if (typeof onParentAlert === "function") {
+      onParentAlert(reportPayload);
+    }
 
     setReportingContact(null);
   };

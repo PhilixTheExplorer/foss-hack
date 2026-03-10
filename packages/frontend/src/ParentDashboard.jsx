@@ -6,9 +6,15 @@ function clampScore(score) {
   return Math.max(0, Math.min(100, numeric));
 }
 
-export default function ParentDashboard() {
-  const [alert, setAlert] = useState(null);
+export default function ParentDashboard({ initialAlert = null }) {
+  const [alert, setAlert] = useState(initialAlert);
   const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!initialAlert?.contactName) return;
+    setAlert(initialAlert);
+    setExpanded(false);
+  }, [initialAlert]);
 
   useEffect(() => {
     const parentChannel = new BroadcastChannel("safenest-parent");

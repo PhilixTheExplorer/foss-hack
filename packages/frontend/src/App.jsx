@@ -54,6 +54,7 @@ function App() {
   const contacts = simulationData;
   const [scores, setScores] = useState({});
   const [reportedContacts, setReportedContacts] = useState(() => new Set());
+  const [latestParentAlert, setLatestParentAlert] = useState(null);
 
   useEffect(() => {
     setScores(scoreAll(contacts));
@@ -76,12 +77,25 @@ function App() {
     });
   };
 
+  const handleParentAlert = (alertPayload) => {
+    if (!alertPayload?.contactName) return;
+    setLatestParentAlert(alertPayload);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <TopNav />
       <Routes>
-        <Route path="/" element={<ChatApp onContactReported={handleContactReported} />} />
-        <Route path="/parent" element={<ParentDashboard />} />
+        <Route
+          path="/"
+          element={
+            <ChatApp
+              onContactReported={handleContactReported}
+              onParentAlert={handleParentAlert}
+            />
+          }
+        />
+        <Route path="/parent" element={<ParentDashboard initialAlert={latestParentAlert} />} />
         <Route
           path="/graph"
           element={
